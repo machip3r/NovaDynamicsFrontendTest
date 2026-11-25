@@ -1,14 +1,12 @@
-import { RenderSection } from '@/components/sections/render-section'
+import { PageBuilder } from '@/components/page-builder'
 import { loadCmsPage } from '@/data/cms'
 
 export default function HomePage() {
-  const { sections } = loadCmsPage()
+  const sections = loadCmsPage()
 
   return (
     <main>
-      {sections.map((section) => (
-        <RenderSection key={section.id} section={section} />
-      ))}
+      <PageBuilder sections={sections} />
     </main>
   )
 }
