@@ -9,6 +9,7 @@ type HeroSectionProps = CmsHeroSection['props'] & {
   id?: string
   headingAs?: 'h1' | 'h2'
   image?: Pick<ImageProps, 'src' | 'alt'>
+  preloadImage?: boolean
 }
 
 export function HeroSection({
@@ -18,6 +19,7 @@ export function HeroSection({
   primaryAction,
   headingAs: Heading = 'h1',
   image,
+  preloadImage = false,
 }: HeroSectionProps) {
   const headingId = useId()
 
@@ -52,7 +54,7 @@ export function HeroSection({
                 src={image.src}
                 alt={image.alt}
                 fill
-                loading="eager"
+                preload={preloadImage}
                 sizes="(min-width: 80rem) 35rem, (min-width: 64rem) 50vw, (min-width: 40rem) calc(100vw - 4rem), calc(100vw - 2.5rem)"
                 className="object-contain"
               />

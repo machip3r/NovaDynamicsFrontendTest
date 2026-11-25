@@ -10,7 +10,7 @@ const poppins = localFont({
   ],
   display: 'swap',
   fallback: ['Avenir Next', 'system-ui', 'sans-serif'],
-  adjustFontFallback: false,
+  adjustFontFallback: 'Arial',
 })
 
 export default function RootLayout({ children }: { children: ReactNode }) {

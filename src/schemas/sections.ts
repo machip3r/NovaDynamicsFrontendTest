@@ -1,14 +1,14 @@
 import { z } from 'zod'
 
-const textSchema = z.string().trim().min(1)
+const textSchema = z.string().regex(/^[^\u0000-\u001f\u007f]*$/, 'Control characters are not allowed.').trim().min(1)
 const webUrlSchema = z.httpUrl()
 const localHrefPattern = /^(?:\/(?!\/)|#(?=\S))[^\s\\]*$/
 
 const actionSchema = z.object({
   label: textSchema,
-  href: z.string().trim().refine(
+  href: textSchema.refine(
     (href) =>
-      localHrefPattern.test(href) ||
+      (!/%(?:0[0-9a-f]|1[0-9a-f]|7f|5c)/i.test(href) && localHrefPattern.test(href)) ||
       (/^https?:\/\//i.test(href) && webUrlSchema.safeParse(href).success),
     'Use a root-relative path, a page anchor, or an HTTP(S) URL.',
   ),

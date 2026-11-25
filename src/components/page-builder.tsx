@@ -1,72 +1,65 @@
+import { Fragment, type ComponentType } from 'react'
+import { z } from 'zod'
+
 import { CtaSection } from '@/components/sections/cta-section'
 import { FeaturesSection } from '@/components/sections/features-section'
 import { HeroSection } from '@/components/sections/hero-section'
 import { PricingSection } from '@/components/sections/pricing-section'
-import { cmsSectionSchema } from '@/schemas/sections'
-import type {
-  CmsSection,
-  CtaSection as CtaSectionData,
-  FeaturesSection as FeaturesSectionData,
-  HeroSection as HeroSectionData,
-  PricingSection as PricingSectionData,
-} from '@/types/sections'
+import {
+  heroSectionSchema, featuresSectionSchema, pricingSectionSchema, ctaSectionSchema,
+} from '@/schemas/sections'
 
-type SectionRegistry = {
-  [Section in CmsSection as Section['type']]: React.ComponentType<Section>
+function registerSection<T extends { id: string; props: object }>(
+  schema: z.ZodType<T>,
+  Component: ComponentType<T['props'] & { id?: string }>,
+) {
+  return (input: unknown) => {
+    const result = schema.safeParse(input)
+    if (!result.success) {
+      return { success: false, message: result.error.issues.map(
+        ({ path, message }) => `${path.join('.')}: ${message}`,
+      ).join(' ') } as const
+    }
+    const { id, props } = result.data
+    return { success: true, id, element: <Component id={id} {...props} /> } as const
+  }
 }
 
-const sectionRegistry = {
-  hero: ({ id, props }: HeroSectionData) => <HeroSection id={id} {...props} />,
-  features: ({ id, props }: FeaturesSectionData) => <FeaturesSection id={id} {...props} />,
-  pricing: ({ id, props }: PricingSectionData) => <PricingSection id={id} {...props} />,
-  cta: ({ id, props }: CtaSectionData) => <CtaSection id={id} {...props} />,
-} satisfies SectionRegistry
-
-function isSupportedType(type: unknown): type is keyof SectionRegistry {
-  return typeof type === 'string' && Object.hasOwn(sectionRegistry, type)
-}
+const registry = new Map([
+  ['hero', registerSection(heroSectionSchema, HeroSection)],
+  ['features', registerSection(featuresSectionSchema, FeaturesSection)],
+  ['pricing', registerSection(pricingSectionSchema, PricingSection)],
+  ['cta', registerSection(ctaSectionSchema, CtaSection)],
+])
 
 function InvalidSection({ message }: { message: string }) {
-  if (process.env.NODE_ENV !== 'development') return null
-
-  return (
-    <aside className="border-y border-ink/20 bg-canvas px-5 py-3 text-sm text-ink" role="status">
+  return process.env.NODE_ENV === 'development' ? (
+    <aside role="status" className="border-y border-ink/20 bg-canvas px-5 py-3 text-sm text-ink">
       {message}
     </aside>
-  )
+  ) : null
 }
 
-function renderSection(section: unknown, index: number) {
-  const result = cmsSectionSchema.safeParse(section)
-
-  if (!result.success) {
-    const type =
-      typeof section === 'object' && section !== null && 'type' in section
-        ? section.type
-        : undefined
-
-    const label = isSupportedType(type) ? `"${type}" section has invalid data` : 'Unsupported section type'
-
-    return (
-      <InvalidSection
-        key={index}
-        message={
-          process.env.NODE_ENV === 'development'
-            ? `${label}. ${result.error.issues.map(({ message }) => message).join(' ')}`
-            : label
-        }
-      />
-    )
+export function PageBuilder({ sections }: { sections: unknown }) {
+  if (!Array.isArray(sections)) {
+    return <InvalidSection message="Expected an array of CMS sections." />
   }
-
-  const validatedSection: CmsSection = result.data
-
-  return React.createElement(
-    sectionRegistry[validatedSection.type],
-    { ...validatedSection, key: validatedSection.id },
-  )
-}
-
-export function PageBuilder({ sections }: { sections: readonly unknown[] }) {
-  return sections.map(renderSection)
+  const seenIds = new Set<string>()
+  return sections.map((section: unknown, index: number) => {
+    const type = typeof section === 'object' && section !== null && 'type' in section
+      ? section.type : undefined
+    const render = typeof type === 'string' ? registry.get(type) : undefined
+    if (!render) {
+      return <InvalidSection key={`invalid-${index}`} message="Unsupported section type." />
+    }
+    const result = render(section)
+    if (!result.success) {
+      return <InvalidSection key={`invalid-${index}`} message={`"${type}" section has invalid data. ${result.message}`} />
+    }
+    if (seenIds.has(result.id)) {
+      return <InvalidSection key={`invalid-${index}`} message={`Duplicate section ID "${result.id}".`} />
+    }
+    seenIds.add(result.id)
+    return <Fragment key={result.id}>{result.element}</Fragment>
+  })
 }

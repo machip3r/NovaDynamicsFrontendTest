@@ -128,3 +128,54 @@ describe('PageBuilder', () => {
     expect(screen.queryByText('Unsupported section type')).not.toBeInTheDocument()
   })
 })
+
+describe('CMS data boundaries', () => {
+  it('shows a diagnostic for a malformed root in development', () => {
+    vi.stubEnv('NODE_ENV', 'development')
+    render(<PageBuilder sections={{ sections: [] }} />)
+    expect(screen.getByRole('status')).toHaveTextContent('Expected an array')
+  })
+
+  it('skips a malformed root in production', () => {
+    vi.stubEnv('NODE_ENV', 'production')
+    const { container } = render(<PageBuilder sections={null} />)
+    expect(container).toBeEmptyDOMElement()
+  })
+
+  it('skips duplicate IDs while keeping later independent sections', () => {
+    vi.stubEnv('NODE_ENV', 'development')
+    render(<PageBuilder sections={[hero, hero, cta]} />)
+    expect(screen.getAllByRole('heading', { name: hero.props.headline })).toHaveLength(1)
+    expect(screen.getByRole('status')).toHaveTextContent('Duplicate section ID')
+    expect(screen.getByRole('heading', { name: cta.props.heading })).toBeVisible()
+  })
+
+  it.each([null, 42, 'hero', {}, { type: '__proto__' }])('survives malformed entry %j', (entry) => {
+    vi.stubEnv('NODE_ENV', 'development')
+    render(<PageBuilder sections={[hero, entry, cta]} />)
+    expect(screen.getByRole('heading', { name: hero.props.headline })).toBeVisible()
+    expect(screen.getByRole('heading', { name: cta.props.heading })).toBeVisible()
+    expect(screen.getByRole('status')).toBeVisible()
+  })
+})
+
+it('renders pricing amounts, currency, included features, and action from props', () => {
+  render(<PageBuilder sections={[{
+    id: 'pricing', type: 'pricing',
+    props: {
+      heading: 'Choose your plan',
+      plans: [{
+        name: 'Business', description: 'For growing teams',
+        price: { amount: 42, currency: 'USD', interval: 'year' },
+        features: ['Unlimited projects'],
+        action: { label: 'Choose Business', href: '/subscribe' },
+      }],
+    },
+  }]} />)
+  expect(screen.getByRole('heading', { name: 'Choose your plan' })).toBeVisible()
+  expect(screen.getByRole('heading', { name: 'Business' })).toBeVisible()
+  expect(screen.getByText('$42')).toBeVisible()
+  expect(screen.getByText('/ year')).toBeVisible()
+  expect(screen.getByText('Unlimited projects')).toBeVisible()
+  expect(screen.getByRole('link', { name: 'Choose Business' })).toHaveAttribute('href', '/subscribe')
+})
