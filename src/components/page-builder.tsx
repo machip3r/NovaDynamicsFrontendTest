@@ -12,10 +12,10 @@ import type {
 } from '@/types/sections'
 
 type SectionRegistry = {
-  hero: (section: HeroSectionData) => React.ReactNode
-  features: (section: FeaturesSectionData) => React.ReactNode
-  pricing: (section: PricingSectionData) => React.ReactNode
-  cta: (section: CtaSectionData) => React.ReactNode
+  hero: React.ComponentType<HeroSectionData>
+  features: React.ComponentType<FeaturesSectionData>
+  pricing: React.ComponentType<PricingSectionData>
+  cta: React.ComponentType<CtaSectionData>
 }
 
 const sectionRegistry = {
@@ -64,16 +64,8 @@ function renderSection(section: unknown, index: number) {
 
   const validatedSection: CmsSection = result.data
 
-  switch (validatedSection.type) {
-    case 'hero':
-      return <sectionRegistry.hero key={validatedSection.id} {...validatedSection} />
-    case 'features':
-      return <sectionRegistry.features key={validatedSection.id} {...validatedSection} />
-    case 'pricing':
-      return <sectionRegistry.pricing key={validatedSection.id} {...validatedSection} />
-    case 'cta':
-      return <sectionRegistry.cta key={validatedSection.id} {...validatedSection} />
-  }
+  const Component = sectionRegistry[validatedSection.type]
+  return <Component key={validatedSection.id} {...validatedSection} />
 }
 
 export function PageBuilder({ sections }: { sections: readonly unknown[] }) {
