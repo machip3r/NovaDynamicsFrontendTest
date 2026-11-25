@@ -1,3 +1,91 @@
-{
-  "sections": []
-}
+[
+  {
+    "id": "hero",
+    "type": "hero",
+    "props": {
+      "headline": "Less chasing. More doing.",
+      "description": "Know what's happening, who's working on what, and what's due next. Without another status meeting.",
+      "primaryAction": {
+        "label": "See pricing",
+        "href": "#pricing"
+      }
+    }
+  },
+  {
+    "id": "features",
+    "type": "features",
+    "props": {
+      "heading": "Good work starts with knowing the plan.",
+      "items": [
+        {
+          "title": "See the bigger picture",
+          "description": "Keep deadlines and milestones in sight, from the first idea to the final delivery."
+        },
+        {
+          "title": "Know who's doing what",
+          "description": "Give every task a clear owner. No more guessing who's picking it up or whether it's done."
+        },
+        {
+          "title": "Keep everyone in the loop",
+          "description": "Leave updates and decisions alongside the work, not buried in another group chat."
+        }
+      ]
+    }
+  },
+  {
+    "id": "pricing",
+    "type": "pricing",
+    "props": {
+      "heading": "Start small. Grow when you're ready.",
+      "plans": [
+        {
+          "name": "Starter",
+          "description": "A little more structure for small teams and side projects.",
+          "price": {
+            "amount": 0,
+            "currency": "USD",
+            "interval": "month"
+          },
+          "features": [
+            "Up to 3 projects",
+            "Shared task boards"
+          ],
+          "action": {
+            "label": "Get started for free",
+            "href": "#cta"
+          }
+        },
+        {
+          "name": "Team",
+          "description": "For teams juggling more projects, deadlines and moving parts.",
+          "price": {
+            "amount": 24,
+            "currency": "USD",
+            "interval": "month"
+          },
+          "features": [
+            "Unlimited projects",
+            "Milestone tracking",
+            "Progress reports"
+          ],
+          "action": {
+            "label": "Get the Team plan",
+            "href": "#cta"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "cta",
+    "type": "cta",
+    "props": {
+      "heading": "Let's talk about how you work.",
+      "description": "Not sure where to start? Tell us a little about your team and we'll help you find the right fit.",
+      "action": {
+        "label": "Talk to us",
+        "href": "/contact"
+      }
+    }
+  }
+]
