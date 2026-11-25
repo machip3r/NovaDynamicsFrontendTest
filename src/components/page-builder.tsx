@@ -12,10 +12,7 @@ import type {
 } from '@/types/sections'
 
 type SectionRegistry = {
-  hero: React.ComponentType<HeroSectionData>
-  features: React.ComponentType<FeaturesSectionData>
-  pricing: React.ComponentType<PricingSectionData>
-  cta: React.ComponentType<CtaSectionData>
+  [Section in CmsSection as Section['type']]: React.ComponentType<Section>
 }
 
 const sectionRegistry = {
@@ -64,8 +61,10 @@ function renderSection(section: unknown, index: number) {
 
   const validatedSection: CmsSection = result.data
 
-  const Component = sectionRegistry[validatedSection.type]
-  return <Component key={validatedSection.id} {...validatedSection} />
+  return React.createElement(
+    sectionRegistry[validatedSection.type],
+    { ...validatedSection, key: validatedSection.id },
+  )
 }
 
 export function PageBuilder({ sections }: { sections: readonly unknown[] }) {
